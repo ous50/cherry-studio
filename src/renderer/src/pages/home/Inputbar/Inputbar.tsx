@@ -682,7 +682,7 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
   return (
     <Container onDragOver={handleDragOver} onDrop={handleDrop} className="inputbar">
       <NarrowLayout style={{ width: '100%' }}>
-        <SelectAtAction isShow={selectAtActionShow} setIsShow={setSelectAtActionShow} />
+        {selectAtActionShow && <SelectAtAction />}
         <InputBarContainer
           id="inputbar"
           className={classNames('inputbar-container', inputFocus && 'focus')}

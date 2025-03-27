@@ -2,10 +2,7 @@ import { List } from 'antd'
 import { t } from 'i18next'
 import { CSSProperties, FC, useEffect, useRef, useState } from 'react'
 
-interface Props {
-  isShow: boolean
-  setIsShow: (show: boolean) => void
-}
+import SelectAtActionModel from './SelectAtActionModel'
 
 interface Action {
   name: string
@@ -29,23 +26,21 @@ const data: Action[] = [
   }
 ]
 
-export const SelectAtAction: FC<Props> = ({ isShow, setIsShow }) => {
+export const SelectAtAction: FC = () => {
   const listRef = useRef<HTMLDivElement>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [selectModelActionShow, setSelectModelActionShow] = useState(false)
+  const [isShow, setIsShow] = useState(true)
   useEffect(() => {
     const listElement = listRef.current
-    if (listElement) {
-      if (isShow) {
-        // 获取内容的实际高度
-        listElement.style.display = 'block'
-        const height = listElement.scrollHeight
-        listElement.style.height = '0'
-        // 触发重绘
-        void listElement.offsetHeight
-        listElement.style.height = `${height}px`
-      } else {
-        listElement.style.height = '0'
-      }
+    if (listElement && isShow) {
+      // 获取内容的实际高度
+      listElement.style.display = 'block'
+      const height = listElement.scrollHeight
+      listElement.style.height = '0'
+      // 触发重绘
+      void listElement.offsetHeight
+      listElement.style.height = `${height}px`
     }
   }, [isShow])
 
@@ -68,6 +63,7 @@ export const SelectAtAction: FC<Props> = ({ isShow, setIsShow }) => {
         case 'Escape':
           e.preventDefault()
           setIsShow(false)
+          setSelectModelActionShow(false)
           break
       }
     }
@@ -83,6 +79,8 @@ export const SelectAtAction: FC<Props> = ({ isShow, setIsShow }) => {
     switch (type) {
       case 'model':
         console.log('Selected type: model')
+        setSelectModelActionShow(true)
+        setIsShow(false)
         break
       case 'knowledge_base':
         console.log('Selected type: knowledge_base')
@@ -114,30 +112,39 @@ export const SelectAtAction: FC<Props> = ({ isShow, setIsShow }) => {
 
   return (
     <div style={containerStyle}>
-      <div ref={listRef} style={listContainerStyle}>
-        <List
-          bordered={false}
-          dataSource={data}
-          renderItem={(item, index) => (
-            <List.Item
-              style={{
-                backgroundColor: selectedIndex === index ? '#4e89e8' : '#2d2d2d',
-                color: selectedIndex === index ? '#ffffff' : '#e0e0e0',
-                padding: '12px 16px',
-                borderBottom: index < data.length - 1 ? '1px solid #3a3a3a' : 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onClick={() => {
-                setSelectedIndex(index)
-                handleItemSelect(item.type)
-              }}
-              onMouseEnter={() => !isShow || setSelectedIndex(index)}>
-              {item.name}
-            </List.Item>
-          )}
-        />
-      </div>
+      {/* Show menu list when isShow is true */}
+      {isShow && (
+        <div ref={listRef} style={listContainerStyle}>
+          <List
+            bordered={false}
+            dataSource={data}
+            renderItem={(item, index) => (
+              <List.Item
+                style={{
+                  backgroundColor: selectedIndex === index ? '#4e89e8' : '#2d2d2d',
+                  color: selectedIndex === index ? '#ffffff' : '#e0e0e0',
+                  padding: '12px 16px',
+                  borderBottom: index < data.length - 1 ? '1px solid #3a3a3a' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onClick={() => {
+                  setSelectedIndex(index)
+                  handleItemSelect(item.type)
+                }}
+                onMouseEnter={() => setSelectedIndex(index)}>
+                {item.name}
+              </List.Item>
+            )}
+          />
+        </div>
+      )}
+      {/* Show only @ with SelectAtActionModel when model is selected */}
+      {selectModelActionShow && (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <SelectAtActionModel isShow={selectModelActionShow} setIsShow={setSelectModelActionShow} />
+        </div>
+      )}
     </div>
   )
 }
