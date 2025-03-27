@@ -1,15 +1,37 @@
 import { List } from 'antd'
 import { t } from 'i18next'
-import { CSSProperties, FC, useEffect, useRef } from 'react'
+import { CSSProperties, FC, useEffect, useRef, useState } from 'react'
 
 interface Props {
   isShow: boolean
+  setIsShow: (show: boolean) => void
 }
 
-const data = [t('chat.actions.model'), t('chat.actions.knowledge_base'), t('chat.actions.mcp')]
+interface Action {
+  name: string
+  type: ActionType
+}
 
-export const SelectAtAction: FC<Props> = ({ isShow }) => {
+type ActionType = 'model' | 'knowledge_base' | 'mcp'
+
+const data: Action[] = [
+  {
+    name: t('chat.actions.model'),
+    type: 'model'
+  },
+  {
+    name: t('chat.actions.knowledge_base'),
+    type: 'knowledge_base'
+  },
+  {
+    name: t('chat.actions.mcp'),
+    type: 'mcp'
+  }
+]
+
+export const SelectAtAction: FC<Props> = ({ isShow, setIsShow }) => {
   const listRef = useRef<HTMLDivElement>(null)
+  const [selectedIndex, setSelectedIndex] = useState(0)
   useEffect(() => {
     const listElement = listRef.current
     if (listElement) {
@@ -27,11 +49,58 @@ export const SelectAtAction: FC<Props> = ({ isShow }) => {
     }
   }, [isShow])
 
+  useEffect(() => {
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (!isShow) return
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault()
+          setSelectedIndex((prev) => Math.max(0, prev - 1))
+          break
+        case 'ArrowDown':
+          e.preventDefault()
+          setSelectedIndex((prev) => Math.min(data.length - 1, prev + 1))
+          break
+        case 'Enter':
+          e.preventDefault()
+          handleItemSelect(data[selectedIndex].type)
+          break
+        case 'Escape':
+          e.preventDefault()
+          setIsShow(false)
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isShow, setIsShow, selectedIndex])
+
+  // Function to handle item selection and print the type
+  const handleItemSelect = (type: ActionType) => {
+    switch (type) {
+      case 'model':
+        console.log('Selected type: model')
+        break
+      case 'knowledge_base':
+        console.log('Selected type: knowledge_base')
+        break
+      case 'mcp':
+        console.log('Selected type: mcp')
+        break
+    }
+  }
+
   const containerStyle: CSSProperties = {
     position: 'absolute',
     bottom: '10%',
     left: '23%',
-    width: 'auto'
+    width: 'auto',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
   }
 
   const listContainerStyle: CSSProperties = {
@@ -39,13 +108,35 @@ export const SelectAtAction: FC<Props> = ({ isShow }) => {
     transition: 'height 0.3s ease, opacity 0.3s ease',
     height: 0,
     opacity: isShow ? 1 : 0,
-    display: 'none' // 初始状态为隐藏，会在useEffect中控制
+    display: 'none', // 初始状态为隐藏，会在useEffect中控制
+    backgroundColor: '#2d2d2d'
   }
 
   return (
     <div style={containerStyle}>
       <div ref={listRef} style={listContainerStyle}>
-        <List bordered dataSource={data} renderItem={(item) => <List.Item>{item}</List.Item>} />
+        <List
+          bordered={false}
+          dataSource={data}
+          renderItem={(item, index) => (
+            <List.Item
+              style={{
+                backgroundColor: selectedIndex === index ? '#4e89e8' : '#2d2d2d',
+                color: selectedIndex === index ? '#ffffff' : '#e0e0e0',
+                padding: '12px 16px',
+                borderBottom: index < data.length - 1 ? '1px solid #3a3a3a' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => {
+                setSelectedIndex(index)
+                handleItemSelect(item.type)
+              }}
+              onMouseEnter={() => !isShow || setSelectedIndex(index)}>
+              {item.name}
+            </List.Item>
+          )}
+        />
       </div>
     </div>
   )
