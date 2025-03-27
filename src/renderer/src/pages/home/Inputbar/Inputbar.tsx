@@ -41,6 +41,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
+import { SelectAtAction } from '../components/SelectAtAction'
 import NarrowLayout from '../Messages/NarrowLayout'
 import AttachmentButton from './AttachmentButton'
 import AttachmentPreview from './AttachmentPreview'
@@ -101,6 +102,7 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
   const isVision = useMemo(() => isVisionModel(model), [model])
   const supportExts = useMemo(() => [...textExts, ...documentExts, ...(isVision ? imageExts : [])], [isVision])
   const navigate = useNavigate()
+  const [selectAtActionShow, setSelectAtActionShow] = useState(false)
 
   const showKnowledgeIcon = useSidebarIconShow('knowledge')
   const showMCPToolsIcon = isFunctionCallingModel(model)
@@ -230,19 +232,19 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const isEnterPressed = event.keyCode == 13
 
-    if (event.key === '@') {
-      const textArea = textareaRef.current?.resizableTextArea?.textArea
-      if (textArea) {
-        const cursorPosition = textArea.selectionStart
-        const textBeforeCursor = text.substring(0, cursorPosition)
-        if (cursorPosition === 0 || textBeforeCursor.endsWith(' ')) {
-          setMentionFromKeyboard(true)
-          EventEmitter.emit(EVENT_NAMES.SHOW_MODEL_SELECTOR)
-          setIsMentionPopupOpen(true)
-          return
-        }
-      }
-    }
+    // if (event.key === '@') {
+    //   const textArea = textareaRef.current?.resizableTextArea?.textArea
+    //   if (textArea) {
+    //     const cursorPosition = textArea.selectionStart
+    //     const textBeforeCursor = text.substring(0, cursorPosition)
+    //     if (cursorPosition === 0 || textBeforeCursor.endsWith(' ')) {
+    //       setMentionFromKeyboard(true)
+    //       EventEmitter.emit(EVENT_NAMES.SHOW_MODEL_SELECTOR)
+    //       setIsMentionPopupOpen(true)
+    //       return
+    //     }
+    //   }
+    // }
 
     if (event.key === 'Escape' && isMentionPopupOpen) {
       setIsMentionPopupOpen(false)
@@ -383,6 +385,9 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
 
       if (lastAtIndex === -1 || textBeforeCursor.slice(lastAtIndex + 1).includes(' ')) {
         setIsMentionPopupOpen(false)
+        setSelectAtActionShow(false)
+      } else {
+        setSelectAtActionShow(true)
       }
     }
   }
@@ -677,6 +682,7 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
   return (
     <Container onDragOver={handleDragOver} onDrop={handleDrop} className="inputbar">
       <NarrowLayout style={{ width: '100%' }}>
+        <SelectAtAction isShow={selectAtActionShow} />
         <InputBarContainer
           id="inputbar"
           className={classNames('inputbar-container', inputFocus && 'focus')}
