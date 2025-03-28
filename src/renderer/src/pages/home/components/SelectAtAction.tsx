@@ -1,3 +1,4 @@
+import { Model } from '@renderer/types'
 import { List } from 'antd'
 import { t } from 'i18next'
 import { CSSProperties, FC, useEffect, useRef, useState } from 'react'
@@ -7,6 +8,11 @@ import SelectAtActionModel from './SelectAtActionModel'
 interface Action {
   name: string
   type: ActionType
+}
+
+interface Props {
+  onMentionModel: (model: Model, fromKeyboard: boolean) => void
+  mentionModels: Model[]
 }
 
 type ActionType = 'model' | 'knowledge_base' | 'mcp'
@@ -26,7 +32,7 @@ const data: Action[] = [
   }
 ]
 
-export const SelectAtAction: FC = () => {
+export const SelectAtAction: FC<Props> = ({ onMentionModel, mentionModels }) => {
   const listRef = useRef<HTMLDivElement>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [selectModelActionShow, setSelectModelActionShow] = useState(false)
@@ -142,7 +148,12 @@ export const SelectAtAction: FC = () => {
       {/* Show only @ with SelectAtActionModel when model is selected */}
       {selectModelActionShow && (
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <SelectAtActionModel isShow={selectModelActionShow} setIsShow={setSelectModelActionShow} />
+          <SelectAtActionModel
+            isShow={selectModelActionShow}
+            setIsShow={setSelectModelActionShow}
+            onMentionModel={onMentionModel}
+            mentionModels={mentionModels}
+          />
         </div>
       )}
     </div>

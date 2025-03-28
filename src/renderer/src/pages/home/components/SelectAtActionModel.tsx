@@ -13,9 +13,11 @@ import styled from 'styled-components'
 interface Props {
   isShow: boolean
   setIsShow: (show: boolean) => void
+  onMentionModel: (model: Model, fromKeyboard: boolean) => void
+  mentionModels: Model[]
 }
 
-export default function SelectAtActionModel({ isShow, setIsShow }: Props) {
+export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel, mentionModels }: Props) {
   const { providers } = useProviders()
   const [pinnedModels, setPinnedModels] = useState<string[]>([])
   const [searchText, setSearchText] = useState('')
@@ -68,7 +70,7 @@ export default function SelectAtActionModel({ isShow, setIsShow }: Props) {
                 {first(m.name)}
               </Avatar>
             ),
-            onClick: () => handleModelSelect(m)
+            onClick: () => onMentionModel(m, false)
           }))
 
         return filteredModels.length > 0
