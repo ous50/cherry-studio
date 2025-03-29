@@ -12,12 +12,13 @@ import styled from 'styled-components'
 
 interface Props {
   isShow: boolean
-  setIsShow: (show: boolean) => void
+  // setIsShow: (show: boolean) => void
+  onClose: () => void
   onMentionModel: (model: Model, fromKeyboard: boolean) => void
   mentionModels: Model[]
 }
 
-export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel, mentionModels }: Props) {
+export default function SelectAtActionModel({ isShow, onClose, onMentionModel, mentionModels }: Props) {
   const { providers } = useProviders()
   const [pinnedModels, setPinnedModels] = useState<string[]>([])
   const [searchText, setSearchText] = useState('')
@@ -336,7 +337,7 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
             setSearchText('')
           } else {
             // Second Escape press closes dropdown
-            setIsShow(false)
+            onClose()
           }
           break
         case 'Backspace':
@@ -380,7 +381,7 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
     selectedIndex,
     scrollToItem,
     handleModelSelect,
-    setIsShow,
+    onClose,
     isSearching,
     searchText,
     resetSearchTimeout,
@@ -394,8 +395,8 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
         dropdownRender={() => menu}
         trigger={['click']}
         open={isShow}
-        onOpenChange={(open) => {
-          setIsShow(open)
+        onOpenChange={() => {
+          onClose()
         }}
         overlayClassName="mention-models-dropdown">
         <Tooltip placement="top" title={t('agents.edit.model.select.title')} arrow>

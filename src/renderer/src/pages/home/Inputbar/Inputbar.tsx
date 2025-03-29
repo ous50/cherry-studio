@@ -42,6 +42,7 @@ import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { SelectAtAction } from '../components/SelectAtAction'
+import SelectedKnowledgeBaseInput from '../components/SelectedKnowledgeBaseInput'
 import NarrowLayout from '../Messages/NarrowLayout'
 import AttachmentButton from './AttachmentButton'
 import AttachmentPreview from './AttachmentPreview'
@@ -588,6 +589,11 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
     setSelectedKnowledgeBases(bases ?? [])
   }
 
+  const handleRemoveKnowledgeBase = (base: KnowledgeBase) => {
+    const newBases = selectedKnowledgeBases.filter((b) => b.id !== base.id)
+    handleKnowledgeBaseSelect(newBases)
+  }
+
   const onMentionModel = (model: Model, fromKeyboard: boolean = false) => {
     const textArea = textareaRef.current?.resizableTextArea?.textArea
     if (textArea) {
@@ -609,6 +615,13 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
       }, 0)
       setMentionFromKeyboard(false)
     }
+  }
+
+  const onAtActionClose = () => {
+    setSelectAtActionShow(false)
+    setTimeout(() => {
+      textareaRef.current?.focus()
+    }, 0)
   }
 
   const handleRemoveModel = (model: Model) => {
@@ -678,6 +691,7 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
       <NarrowLayout style={{ width: '100%' }}>
         {selectAtActionShow && (
           <SelectAtAction
+            onClose={onAtActionClose}
             onMentionModel={onMentionModel}
             mentionModels={mentionModels}
             selectedKnowledgeBases={selectedKnowledgeBases}
@@ -690,6 +704,10 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
           ref={containerRef}>
           <AttachmentPreview files={files} setFiles={setFiles} />
           <MentionModelsInput selectedModels={mentionModels} onRemoveModel={handleRemoveModel} />
+          <SelectedKnowledgeBaseInput
+            selectedKnowledgeBase={selectedKnowledgeBases}
+            onRemoveKnowledgeBase={handleRemoveKnowledgeBase}
+          />
           <Textarea
             value={text}
             onChange={onChange}

@@ -3,8 +3,8 @@ import { List } from 'antd'
 import { t } from 'i18next'
 import { CSSProperties, FC, useEffect, useRef, useState } from 'react'
 
+import SelectAtActionKnowledge from './SelectAtActionKnowledge'
 import SelectAtActionModel from './SelectAtActionModel'
-import SelectKnowledgePopup from './SelectKnowledgePopup'
 
 interface Action {
   name: string
@@ -16,6 +16,7 @@ interface Props {
   mentionModels: Model[]
   selectedKnowledgeBases: KnowledgeBase[]
   handleKnowledgeBaseSelect: (bases: KnowledgeBase[]) => void
+  onClose: () => void
 }
 
 type ActionType = 'model' | 'knowledge_base' | 'mcp'
@@ -28,10 +29,6 @@ const data: Action[] = [
   {
     name: t('chat.actions.knowledge_base'),
     type: 'knowledge_base'
-  },
-  {
-    name: t('chat.actions.mcp'),
-    type: 'mcp'
   }
 ]
 
@@ -39,12 +36,13 @@ export const SelectAtAction: FC<Props> = ({
   onMentionModel,
   mentionModels,
   selectedKnowledgeBases,
-  handleKnowledgeBaseSelect
+  handleKnowledgeBaseSelect,
+  onClose
 }) => {
   const listRef = useRef<HTMLDivElement>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [selectModelActionShow, setSelectModelActionShow] = useState(false)
-  const [isKnowledgePopupOpen, setIsKnowledgePopupOpen] = useState(false)
+  const [selectKnowledgeActionShow, setSelectKnowlegdeActionShow] = useState(false)
   const [isShow, setIsShow] = useState(true)
   useEffect(() => {
     const listElement = listRef.current
@@ -77,6 +75,7 @@ export const SelectAtAction: FC<Props> = ({
           break
         case 'Escape':
           e.preventDefault()
+          onClose()
           setIsShow(false)
           setSelectModelActionShow(false)
           break
@@ -98,7 +97,7 @@ export const SelectAtAction: FC<Props> = ({
         setIsShow(false)
         break
       case 'knowledge_base':
-        setIsKnowledgePopupOpen(true)
+        setSelectKnowlegdeActionShow(true)
         setIsShow(false)
         console.log('Selected type: knowledge_base')
         break
@@ -168,37 +167,23 @@ export const SelectAtAction: FC<Props> = ({
       )}
       {/* Show only @ with SelectAtActionModel when model is selected */}
       {selectModelActionShow && (
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <SelectAtActionModel
-            isShow={selectModelActionShow}
-            setIsShow={setSelectModelActionShow}
-            onMentionModel={onMentionModel}
-            mentionModels={mentionModels}
-          />
-        </div>
+        <SelectAtActionModel
+          isShow={selectModelActionShow}
+          // setIsShow={setSelectModelActionShow}
+          onClose={onClose}
+          onMentionModel={onMentionModel}
+          mentionModels={mentionModels}
+        />
       )}
-      {isKnowledgePopupOpen && (
-        <div style={{ display: 'flex', alignItems: 'center', width: 'auto' }}>
-          <SelectKnowledgePopup
-            handleKnowledgeBaseSelect={handleKnowledgeBaseSelect}
-            selectedKnowledgeBase={selectedKnowledgeBases}
-          />
-        </div>
+      {selectKnowledgeActionShow && (
+        <SelectAtActionKnowledge
+          onClose={onClose}
+          isShow={selectKnowledgeActionShow}
+          // setIsShow={setSelectKnowlegdeActionShow}
+          handleKnowledgeBaseSelect={handleKnowledgeBaseSelect}
+          selectedKnowledgeBase={selectedKnowledgeBases}
+        />
       )}
     </div>
   )
 }
-// const KnowledgePopupContainer = styled.div`
-//   position: absolute;
-//   top: 100%;
-//   left: 0;
-//   width: auto;
-//   min-width: 300px;
-//   z-index: 1000;
-//   background-color: var(--color-background-opacity);
-//   border-radius: 10px;
-//   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-//   max-height: 300px;
-//   overflow-y: auto;
-//   margin-bottom: 5px;
-// `
