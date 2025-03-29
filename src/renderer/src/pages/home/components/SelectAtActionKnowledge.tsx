@@ -2,7 +2,7 @@ import { FileSearchOutlined } from '@ant-design/icons'
 import { useAppSelector } from '@renderer/store'
 import { KnowledgeBase } from '@renderer/types'
 import { Dropdown, Empty, Flex, Input, List, Tooltip, Typography } from 'antd'
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -28,6 +28,7 @@ const SelectAtActionKnowledge: FC<Props> = ({
   const [filteredBases, setFilteredBases] = useState<KnowledgeBase[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const { t } = useTranslation()
+  const searchInputRef = useRef<any>(null)
   console.info('knowledgeState is {}', knowledgeState)
 
   useEffect(() => {
@@ -56,6 +57,16 @@ const SelectAtActionKnowledge: FC<Props> = ({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedIndex, filteredBases, onClose, handleKnowledgeBaseSelect])
 
+  // 添加自动聚焦功能
+  useEffect(() => {
+    if (isShow && searchInputRef.current) {
+      // 给一点延迟，确保DOM已经渲染
+      setTimeout(() => {
+        searchInputRef.current?.focus()
+      }, 50)
+    }
+  }, [isShow])
+
   useEffect(() => {
     if (searchText) {
       setFilteredBases(
@@ -79,7 +90,7 @@ const SelectAtActionKnowledge: FC<Props> = ({
         backgroundColor: 'var(--color-background, #fff)',
         borderColor: 'var(--color-border, var(--theme-color-hover))'
       }}>
-      <Container>
+      <Container style={{ width: '340px', height: '350px' }}>
         <Header>
           <Title level={5}>{t('agents.add.knowledge_base.placeholder')}</Title>
           <SearchInput
@@ -88,34 +99,37 @@ const SelectAtActionKnowledge: FC<Props> = ({
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
+            ref={searchInputRef}
           />
         </Header>
 
-        {knowledgeState.bases.length === 0 ? (
-          <EmptyContainer>
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('knowledge.empty')} />
-          </EmptyContainer>
-        ) : (
-          <ListContainer>
-            <List
-              itemLayout="horizontal"
-              dataSource={filteredBases}
-              renderItem={(base, index) => (
-                <KnowledgeItem $selected={index === selectedIndex} onClick={() => handleKnowledgeBaseSelect([base])}>
-                  <KnowledgeAvatar theme={{ $parentSelected: index === selectedIndex }}>
-                    <FileSearchOutlined />
-                  </KnowledgeAvatar>
-                  <KnowledgeInfo>
-                    <KnowledgeName>{base.name}</KnowledgeName>
-                  </KnowledgeInfo>
-                </KnowledgeItem>
-              )}
-              locale={{
-                emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('knowledge.empty')} />
-              }}
-            />
-          </ListContainer>
-        )}
+        <div style={{ flex: 1, minHeight: '250px' }}>
+          {knowledgeState.bases.length === 0 ? (
+            <EmptyContainer>
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('knowledge.empty')} />
+            </EmptyContainer>
+          ) : (
+            <ListContainer>
+              <List
+                itemLayout="horizontal"
+                dataSource={filteredBases}
+                renderItem={(base, index) => (
+                  <KnowledgeItem $selected={index === selectedIndex} onClick={() => handleKnowledgeBaseSelect([base])}>
+                    <KnowledgeAvatar theme={{ $parentSelected: index === selectedIndex }}>
+                      <FileSearchOutlined />
+                    </KnowledgeAvatar>
+                    <KnowledgeInfo>
+                      <KnowledgeName>{base.name}</KnowledgeName>
+                    </KnowledgeInfo>
+                  </KnowledgeItem>
+                )}
+                locale={{
+                  emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('knowledge.empty')} />
+                }}
+              />
+            </ListContainer>
+          )}
+        </div>
       </Container>
     </div>
   )
@@ -141,7 +155,8 @@ const Container = styled(Flex)`
   background-color: var(--color-background);
   border-radius: 12px;
   overflow: hidden;
-  // max-height: 400px;
+  width: 340px;
+  min-height: 350px;
   display: flex;
   flex-direction: column;
 `
@@ -178,6 +193,7 @@ const EmptyContainer = styled.div`
   align-items: center;
   color: var(--color-text-3);
   font-size: 14px;
+  height: 200px; /* 固定高度确保空状态下有足够的空间 */
 `
 
 const ListContainer = styled.div`
