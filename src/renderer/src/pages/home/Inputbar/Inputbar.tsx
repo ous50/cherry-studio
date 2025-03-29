@@ -676,7 +676,14 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
   return (
     <Container onDragOver={handleDragOver} onDrop={handleDrop} className="inputbar">
       <NarrowLayout style={{ width: '100%' }}>
-        {selectAtActionShow && <SelectAtAction onMentionModel={onMentionModel} mentionModels={mentionModels} />}
+        {selectAtActionShow && (
+          <SelectAtAction
+            onMentionModel={onMentionModel}
+            mentionModels={mentionModels}
+            selectedKnowledgeBases={selectedKnowledgeBases}
+            handleKnowledgeBaseSelect={handleKnowledgeBaseSelect}
+          />
+        )}
         <InputBarContainer
           id="inputbar"
           className={classNames('inputbar-container', inputFocus && 'focus')}

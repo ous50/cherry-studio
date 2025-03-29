@@ -1,9 +1,10 @@
-import { Model } from '@renderer/types'
+import { KnowledgeBase, Model } from '@renderer/types'
 import { List } from 'antd'
 import { t } from 'i18next'
 import { CSSProperties, FC, useEffect, useRef, useState } from 'react'
 
 import SelectAtActionModel from './SelectAtActionModel'
+import SelectKnowledgePopup from './SelectKnowledgePopup'
 
 interface Action {
   name: string
@@ -13,6 +14,8 @@ interface Action {
 interface Props {
   onMentionModel: (model: Model, fromKeyboard: boolean) => void
   mentionModels: Model[]
+  selectedKnowledgeBases: KnowledgeBase[]
+  handleKnowledgeBaseSelect: (bases: KnowledgeBase[]) => void
 }
 
 type ActionType = 'model' | 'knowledge_base' | 'mcp'
@@ -32,10 +35,16 @@ const data: Action[] = [
   }
 ]
 
-export const SelectAtAction: FC<Props> = ({ onMentionModel, mentionModels }) => {
+export const SelectAtAction: FC<Props> = ({
+  onMentionModel,
+  mentionModels,
+  selectedKnowledgeBases,
+  handleKnowledgeBaseSelect
+}) => {
   const listRef = useRef<HTMLDivElement>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [selectModelActionShow, setSelectModelActionShow] = useState(false)
+  const [isKnowledgePopupOpen, setIsKnowledgePopupOpen] = useState(false)
   const [isShow, setIsShow] = useState(true)
   useEffect(() => {
     const listElement = listRef.current
@@ -89,6 +98,7 @@ export const SelectAtAction: FC<Props> = ({ onMentionModel, mentionModels }) => 
         setIsShow(false)
         break
       case 'knowledge_base':
+        setIsKnowledgePopupOpen(true)
         console.log('Selected type: knowledge_base')
         break
       case 'mcp':
@@ -165,6 +175,14 @@ export const SelectAtAction: FC<Props> = ({ onMentionModel, mentionModels }) => 
             mentionModels={mentionModels}
           />
         </div>
+      )}
+      {isKnowledgePopupOpen && (
+        <KnowledgePopupContainer>
+          <SelectKnowledgePopup
+            handleKnowledgeBaseSelect={handleKnowledgeBaseSelect}
+            selectedKnowledgeBase={selectedKnowledgeBases}
+          />
+        </KnowledgePopupContainer>
       )}
     </div>
   )
