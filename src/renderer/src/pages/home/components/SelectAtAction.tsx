@@ -97,14 +97,16 @@ export const SelectAtAction: FC<Props> = ({ onMentionModel, mentionModels }) => 
     }
   }
 
+  // Define all styles as separate objects to improve readability and maintainability
   const containerStyle: CSSProperties = {
-    position: 'absolute',
-    bottom: '10%',
-    left: '23%',
-    width: 'auto',
+    // position: 'absolute',
+    // bottom: '10%',
+    // left: '23%',
+    marginLeft: '2%',
+    width: '8%',
     borderRadius: '8px',
     overflow: 'hidden',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+    boxShadow: '0 4px 12px var(--theme-color-outline, rgba(0, 0, 0, 0.15))'
   }
 
   const listContainerStyle: CSSProperties = {
@@ -112,8 +114,22 @@ export const SelectAtAction: FC<Props> = ({ onMentionModel, mentionModels }) => 
     transition: 'height 0.3s ease, opacity 0.3s ease',
     height: 0,
     opacity: isShow ? 1 : 0,
-    display: 'none', // 初始状态为隐藏，会在useEffect中控制
-    backgroundColor: '#2d2d2d'
+    backgroundColor: 'var(--color-background, var(--theme-color-hover))'
+  }
+
+  // Create a function to get the item style based on whether it's selected and its position
+  const getItemStyle = (index: number, isSelected: boolean): CSSProperties => {
+    return {
+      backgroundColor: isSelected
+        ? 'var(--theme-color, var(--ant-primary-color))'
+        : 'var(--color-background-soft, #ffffff)',
+      color: isSelected ? '#fff' : 'var(--color-text, #000)',
+      padding: '12px 16px',
+      borderBottom: index < data.length - 1 ? '1px solid var(--color-border, var(--theme-color-hover))' : 'none',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      borderRadius: index === 0 ? '8px 8px 0 0' : index === data.length - 1 ? '0 0 8px 8px' : '0'
+    }
   }
 
   return (
@@ -126,14 +142,7 @@ export const SelectAtAction: FC<Props> = ({ onMentionModel, mentionModels }) => 
             dataSource={data}
             renderItem={(item, index) => (
               <List.Item
-                style={{
-                  backgroundColor: selectedIndex === index ? '#4e89e8' : '#2d2d2d',
-                  color: selectedIndex === index ? '#ffffff' : '#e0e0e0',
-                  padding: '12px 16px',
-                  borderBottom: index < data.length - 1 ? '1px solid #3a3a3a' : 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
+                style={getItemStyle(index, selectedIndex === index)}
                 onClick={() => {
                   setSelectedIndex(index)
                   handleItemSelect(item.type)

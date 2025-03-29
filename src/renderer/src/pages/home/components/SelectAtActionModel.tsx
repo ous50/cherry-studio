@@ -6,7 +6,7 @@ import { getModelUniqId } from '@renderer/services/ModelService'
 import { Model, Provider } from '@renderer/types'
 import { Avatar, Dropdown, Tooltip } from 'antd'
 import { first, sortBy } from 'lodash'
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -30,6 +30,27 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
     itemRefs.current[index] = el
   }
 
+  const togglePin = useCallback(
+    (modelId: string) => {
+      setPinnedModels((prev) => {
+        if (prev.includes(modelId)) {
+          return prev.filter((id) => id !== modelId)
+        } else {
+          return [...prev, modelId]
+        }
+      })
+    },
+    [setPinnedModels]
+  )
+
+  const handleModelSelect = useCallback(
+    (m: Model) => {
+      onMentionModel(m, false)
+      // setIsShow(false)
+    },
+    [onMentionModel]
+  )
+
   const modelMenuItems = useMemo(() => {
     const items = providers
       .filter((p) => p.models && p.models.length > 0)
@@ -39,6 +60,8 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
           .filter((m) => !isRerankModel(m))
           // Filter out pinned models from regular groups
           .filter((m) => !pinnedModels.includes(getModelUniqId(m)))
+          // Filter out already selected models
+          .filter((m) => !mentionModels.some((selectedModel) => getModelUniqId(selectedModel) === getModelUniqId(m)))
           // Filter by search text
           .filter((m) => {
             if (!searchText) return true
@@ -70,7 +93,7 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
                 {first(m.name)}
               </Avatar>
             ),
-            onClick: () => onMentionModel(m, false)
+            onClick: () => handleModelSelect(m)
           }))
 
         return filteredModels.length > 0
@@ -90,6 +113,8 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
         .flatMap((p) =>
           p.models
             .filter((m) => pinnedModels.includes(getModelUniqId(m)))
+            // Filter out already selected models
+            .filter((m) => !mentionModels.some((selectedModel) => getModelUniqId(selectedModel) === getModelUniqId(m)))
             .map((m) => ({
               key: getModelUniqId(m),
               model: m,
@@ -137,15 +162,44 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
 
     // Remove empty groups
     return items.filter((group) => group.children.length > 0)
-  }, [providers, pinnedModels, searchText, t])
+  }, [providers, pinnedModels, searchText, t, togglePin, handleModelSelect, mentionModels])
 
   // Get flattened list of all model items
   const flatModelItems = useMemo(() => {
     return modelMenuItems.flatMap((group) => group?.children || [])
   }, [modelMenuItems])
 
+  // Scroll selected item into view
+  const scrollToItem = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < flatModelItems.length) {
+        const element = itemRefs.current[index]
+        if (element && menuRef.current) {
+          const container = menuRef.current
+          const elementTop = element.offsetTop
+          const elementBottom = elementTop + element.clientHeight
+          const containerTop = container.scrollTop
+          const containerBottom = containerTop + container.clientHeight
+
+          if (elementTop < containerTop) {
+            container.scrollTop = elementTop
+          } else if (elementBottom > containerBottom) {
+            container.scrollTop = elementBottom - container.clientHeight
+          }
+        }
+      }
+    },
+    [flatModelItems, itemRefs]
+  )
+
   const menu = (
-    <div ref={menuRef} className="ant-dropdown-menu">
+    <div
+      ref={menuRef}
+      className="ant-dropdown-menu"
+      style={{
+        backgroundColor: 'var(--color-background, #fff)',
+        borderColor: 'var(--color-border, var(--theme-color-hover))'
+      }}>
       {flatModelItems.length > 0 ? (
         modelMenuItems.map((group, groupIndex) => {
           if (!group) return null
@@ -155,7 +209,11 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
 
           return (
             <div key={group.key} className="ant-dropdown-menu-item-group">
-              <div className="ant-dropdown-menu-item-group-title">{group.label}</div>
+              <div
+                className="ant-dropdown-menu-item-group-title"
+                style={{ color: 'var(--theme-color, var(--ant-primary-color))' }}>
+                {group.label}
+              </div>
               <div>
                 {group.children.map((item, idx) => (
                   <div
@@ -164,6 +222,15 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
                     className={`ant-dropdown-menu-item ${
                       selectedIndex === startIndex + idx ? 'ant-dropdown-menu-item-selected' : ''
                     }`}
+                    style={{
+                      backgroundColor:
+                        selectedIndex === startIndex + idx
+                          ? 'var(--theme-color, var(--ant-primary-color))'
+                          : 'transparent',
+                      color: selectedIndex === startIndex + idx ? '#fff' : 'var(--color-text, inherit)',
+                      borderColor: 'var(--color-border, var(--theme-color-hover))',
+                      transition: 'all 0.2s ease'
+                    }}
                     onClick={item.onClick}>
                     <span className="ant-dropdown-menu-item-icon">{item.icon}</span>
                     {item.label}
@@ -175,16 +242,67 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
         })
       ) : (
         <div className="ant-dropdown-menu-item-group">
-          <div className="ant-dropdown-menu-item no-results">{t('models.no_matches')}</div>
+          <div className="ant-dropdown-menu-item no-results" style={{ color: 'var(--color-text, inherit)' }}>
+            {t('models.no_matches')}
+          </div>
         </div>
       )}
     </div>
   )
 
+  // Keyboard navigation handlers
+  useEffect(() => {
+    if (!isShow) {
+      setSelectedIndex(-1)
+      return
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isShow) return
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setSelectedIndex((prevIndex) => {
+            const newIndex = prevIndex < flatModelItems.length - 1 ? prevIndex + 1 : 0
+            scrollToItem(newIndex)
+            return newIndex
+          })
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setSelectedIndex((prevIndex) => {
+            const newIndex = prevIndex > 0 ? prevIndex - 1 : flatModelItems.length - 1
+            scrollToItem(newIndex)
+            return newIndex
+          })
+          break
+        case 'Enter':
+          e.preventDefault()
+          if (selectedIndex >= 0 && selectedIndex < flatModelItems.length) {
+            const selectedItem = flatModelItems[selectedIndex]
+            if (selectedItem && selectedItem.model) {
+              handleModelSelect(selectedItem.model)
+            }
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          setIsShow(false)
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isShow, flatModelItems, selectedIndex, scrollToItem, handleModelSelect, setIsShow])
+
   return isShow ? (
     <main>
       <Dropdown
-        overlayStyle={{ marginBottom: 20 }}
+        overlayStyle={{ marginBottom: 20, boxShadow: '0 4px 12px var(--theme-color-outline, rgba(0, 0, 0, 0.15))' }}
         dropdownRender={() => menu}
         trigger={['click']}
         open={isShow}
@@ -210,6 +328,7 @@ const ModelItem = styled.div`
   width: 100%;
   min-width: 200px;
   gap: 16px;
+  color: var(--color-text, inherit);
 
   &:hover {
     .pin-icon {
@@ -223,6 +342,7 @@ const ModelNameRow = styled.div`
   flex-direction: row;
   align-items: center;
   gap: 8px;
+  color: var(--color-text, inherit);
 `
 
 const PinIcon = styled.span.attrs({ className: 'pin-icon' })<{ $isPinned: boolean }>`
@@ -231,19 +351,12 @@ const PinIcon = styled.span.attrs({ className: 'pin-icon' })<{ $isPinned: boolea
   opacity: ${(props) => (props.$isPinned ? 0.9 : 0)};
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   right: 0;
-  color: ${(props) => (props.$isPinned ? 'var(--color-primary)' : 'inherit')};
+  color: ${(props) => (props.$isPinned ? 'var(--theme-color, var(--ant-primary-color))' : 'inherit')};
   transform: ${(props) => (props.$isPinned ? 'rotate(-45deg)' : 'none')};
   font-size: 13px;
 
   &:hover {
     opacity: ${(props) => (props.$isPinned ? 1 : 0.7)} !important;
-    color: ${(props) => (props.$isPinned ? 'var(--color-primary)' : 'inherit')};
+    color: ${(props) => (props.$isPinned ? 'var(--theme-color-hover, var(--ant-primary-color))' : 'inherit')};
   }
 `
-function togglePin(arg0: string) {
-  throw new Error('Function not implemented.')
-}
-
-function handleModelSelect(m: Model): any {
-  throw new Error('Function not implemented.')
-}
