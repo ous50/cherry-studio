@@ -2,7 +2,6 @@ import { KnowledgeBase, Model } from '@renderer/types'
 import { List } from 'antd'
 import { t } from 'i18next'
 import { CSSProperties, FC, useEffect, useRef, useState } from 'react'
-import styled from 'styled-components'
 
 import SelectAtActionModel from './SelectAtActionModel'
 import SelectKnowledgePopup from './SelectKnowledgePopup'
@@ -179,26 +178,27 @@ export const SelectAtAction: FC<Props> = ({
         </div>
       )}
       {isKnowledgePopupOpen && (
-        <KnowledgePopupContainer>
+        <div style={{ display: 'flex', alignItems: 'center', width: 'auto' }}>
           <SelectKnowledgePopup
             handleKnowledgeBaseSelect={handleKnowledgeBaseSelect}
             selectedKnowledgeBase={selectedKnowledgeBases}
           />
-        </KnowledgePopupContainer>
+        </div>
       )}
     </div>
   )
 }
-const KnowledgePopupContainer = styled.div`
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  width: auto%;
-  z-index: 1000;
-  background-color: var(--color-background-opacity);
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  max-height: 300px;
-  overflow-y: auto;
-  margin-bottom: 5px;
-`
+// const KnowledgePopupContainer = styled.div`
+//   position: absolute;
+//   top: 100%;
+//   left: 0;
+//   width: auto;
+//   min-width: 300px;
+//   z-index: 1000;
+//   background-color: var(--color-background-opacity);
+//   border-radius: 10px;
+//   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+//   max-height: 300px;
+//   overflow-y: auto;
+//   margin-bottom: 5px;
+// `
