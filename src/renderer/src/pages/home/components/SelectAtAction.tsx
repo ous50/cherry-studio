@@ -2,6 +2,7 @@ import { KnowledgeBase, Model } from '@renderer/types'
 import { List } from 'antd'
 import { t } from 'i18next'
 import { CSSProperties, FC, useEffect, useRef, useState } from 'react'
+import styled from 'styled-components'
 
 import SelectAtActionModel from './SelectAtActionModel'
 import SelectKnowledgePopup from './SelectKnowledgePopup'
@@ -99,6 +100,7 @@ export const SelectAtAction: FC<Props> = ({
         break
       case 'knowledge_base':
         setIsKnowledgePopupOpen(true)
+        setIsShow(false)
         console.log('Selected type: knowledge_base')
         break
       case 'mcp':
@@ -187,3 +189,16 @@ export const SelectAtAction: FC<Props> = ({
     </div>
   )
 }
+const KnowledgePopupContainer = styled.div`
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: auto%;
+  z-index: 1000;
+  background-color: var(--color-background-opacity);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 5px;
+`
