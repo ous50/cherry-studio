@@ -21,7 +21,9 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
   const { providers } = useProviders()
   const [pinnedModels, setPinnedModels] = useState<string[]>([])
   const [searchText, setSearchText] = useState('')
-  const [selectedIndex, setSelectedIndex] = useState(-1)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchTimeoutId, setSearchTimeoutId] = useState<NodeJS.Timeout | null>(null)
 
   const { t } = useTranslation()
   const itemRefs = useRef<Array<HTMLDivElement | null>>([])
@@ -200,6 +202,31 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
         backgroundColor: 'var(--color-background, #fff)',
         borderColor: 'var(--color-border, var(--theme-color-hover))'
       }}>
+      {isSearching && (
+        <div
+          className="search-indicator"
+          style={{
+            padding: '8px 16px',
+            borderBottom: '1px solid var(--color-border, var(--theme-color-hover))',
+            color: 'var(--theme-color, var(--ant-primary-color))',
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+          <span>
+            {t('common.search')}: <strong>{searchText}</strong>
+          </span>
+          <span
+            style={{ cursor: 'pointer', opacity: 0.7 }}
+            onClick={() => {
+              setIsSearching(false)
+              setSearchText('')
+            }}>
+            ×
+          </span>
+        </div>
+      )}
       {flatModelItems.length > 0 ? (
         modelMenuItems.map((group, groupIndex) => {
           if (!group) return null
@@ -250,16 +277,31 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
     </div>
   )
 
-  // Keyboard navigation handlers
+  // Reset search after a period of inactivity
+  const resetSearchTimeout = useCallback(() => {
+    if (searchTimeoutId) {
+      clearTimeout(searchTimeoutId)
+    }
+
+    const timeout = setTimeout(() => {
+      setIsSearching(false)
+      setSearchText('')
+    }, 3000) // Reset search after 3 seconds of inactivity
+
+    setSearchTimeoutId(timeout)
+  }, [searchTimeoutId])
+
+  // Keyboard navigation and search handlers
   useEffect(() => {
     if (!isShow) {
-      setSelectedIndex(-1)
+      setSelectedIndex(0)
       return
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isShow) return
 
+      // Handle navigation keys
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
@@ -288,7 +330,38 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
           break
         case 'Escape':
           e.preventDefault()
-          setIsShow(false)
+          if (isSearching) {
+            // First Escape press clears search
+            setIsSearching(false)
+            setSearchText('')
+          } else {
+            // Second Escape press closes dropdown
+            setIsShow(false)
+          }
+          break
+        case 'Backspace':
+          if (isSearching && searchText.length > 0) {
+            e.preventDefault()
+            setSearchText(searchText.slice(0, -1))
+            resetSearchTimeout()
+            if (searchText.length === 1) {
+              // If we're deleting the last character, reset search index
+              setSelectedIndex(0)
+            }
+          }
+          break
+        default:
+          // If it's a printable character (letters, numbers, symbols)
+          if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            e.preventDefault()
+            setIsSearching(true)
+            setSearchText((prev) => prev + e.key)
+            resetSearchTimeout()
+            // Auto-select first matching result
+            if (flatModelItems.length > 0) {
+              setSelectedIndex(0)
+            }
+          }
           break
       }
     }
@@ -296,8 +369,23 @@ export default function SelectAtActionModel({ isShow, setIsShow, onMentionModel,
     window.addEventListener('keydown', handleKeyDown)
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
+      // Clear timeout when component unmounts
+      if (searchTimeoutId) {
+        clearTimeout(searchTimeoutId)
+      }
     }
-  }, [isShow, flatModelItems, selectedIndex, scrollToItem, handleModelSelect, setIsShow])
+  }, [
+    isShow,
+    flatModelItems,
+    selectedIndex,
+    scrollToItem,
+    handleModelSelect,
+    setIsShow,
+    isSearching,
+    searchText,
+    resetSearchTimeout,
+    searchTimeoutId
+  ])
 
   return isShow ? (
     <main>

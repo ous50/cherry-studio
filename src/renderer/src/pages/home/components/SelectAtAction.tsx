@@ -104,6 +104,7 @@ export const SelectAtAction: FC<Props> = ({ onMentionModel, mentionModels }) => 
     // left: '23%',
     marginLeft: '2%',
     width: '8%',
+    minWidth: '120px',
     borderRadius: '8px',
     overflow: 'hidden',
     boxShadow: '0 4px 12px var(--theme-color-outline, rgba(0, 0, 0, 0.15))'

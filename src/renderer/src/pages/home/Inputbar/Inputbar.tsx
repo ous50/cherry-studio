@@ -375,19 +375,13 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value
     setText(newText)
-
-    // Check if @ was deleted
     const textArea = textareaRef.current?.resizableTextArea?.textArea
     if (textArea) {
-      const cursorPosition = textArea.selectionStart
-      const textBeforeCursor = newText.substring(0, cursorPosition)
-      const lastAtIndex = textBeforeCursor.lastIndexOf('@')
-
-      if (lastAtIndex === -1 || textBeforeCursor.slice(lastAtIndex + 1).includes(' ')) {
+      if (newText.trim() === '@') {
+        setSelectAtActionShow(true)
+      } else {
         setIsMentionPopupOpen(false)
         setSelectAtActionShow(false)
-      } else {
-        setSelectAtActionShow(true)
       }
     }
   }
