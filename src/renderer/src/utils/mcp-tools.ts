@@ -61,7 +61,8 @@ export function mcpToolsToOpenAITools(mcpTools: MCPTool[]): Array<ChatCompletion
     type: 'function',
     name: tool.name,
     function: {
-      name: tool.id,
+      // 确保函数名以字母或下划线开头
+      name: /^[a-zA-Z_]/.test(tool.id) ? tool.id : `t_${tool.id}`,
       description: tool.description,
       parameters: {
         type: 'object',
@@ -144,7 +145,8 @@ export async function callMCPTool(tool: MCPTool): Promise<any> {
 export function mcpToolsToAnthropicTools(mcpTools: MCPTool[]): Array<ToolUnion> {
   return mcpTools.map((tool) => {
     const t: Tool = {
-      name: tool.id,
+      // 确保函数名以字母或下划线开头
+      name: /^[a-zA-Z_]/.test(tool.id) ? tool.id : `t_${tool.id}`,
       description: tool.description,
       // @ts-ignore no check
       input_schema: tool.inputSchema
@@ -173,8 +175,10 @@ export function mcpToolsToGeminiTools(mcpTools: MCPTool[] | undefined): geminiTo
 
   for (const tool of mcpTools) {
     const properties = filterPropertieAttributes(tool, true)
+    // 确保函数名以字母或下划线开头
+    const functionName = /^[a-zA-Z_]/.test(tool.id) ? tool.id : `t_${tool.id}`
     const functionDeclaration: FunctionDeclaration = {
-      name: tool.id,
+      name: functionName,
       description: tool.description,
       ...(Object.keys(properties).length > 0
         ? {
@@ -199,7 +203,8 @@ export function geminiFunctionCallToMcpTool(
 ): MCPTool | undefined {
   if (!fcall) return undefined
   if (!mcpTools) return undefined
-  const tool = mcpTools.find((tool) => tool.id === fcall.name)
+  // 查找工具时考虑可能添加了前缀的情况
+  const tool = mcpTools.find((tool) => tool.id === fcall.name || `t_${tool.id}` === fcall.name)
   if (!tool) {
     return undefined
   }
