@@ -13,6 +13,7 @@ import { getStoreSetting } from '@renderer/hooks/useSettings'
 import i18n from '@renderer/i18n'
 import { getAssistantSettings, getDefaultModel, getTopNamingModel } from '@renderer/services/AssistantService'
 import { EVENT_NAMES } from '@renderer/services/EventService'
+import { buildSystemPrompt } from '@renderer/services/mcp/prompt'
 import {
   filterContextMessages,
   filterEmptyMessages,
@@ -31,12 +32,7 @@ import {
 } from '@renderer/types'
 import { removeSpecialCharactersForTopicName } from '@renderer/utils'
 import { addImageFileToContents } from '@renderer/utils/formats'
-import {
-  callMCPTool,
-  mcpToolsToOpenAITools,
-  openAIToolsToMcpTool,
-  upsertMCPToolResponse
-} from '@renderer/utils/mcp-tools'
+import { callMCPTool, openAIToolsToMcpTool, upsertMCPToolResponse } from '@renderer/utils/mcp-tools'
 import { isEmpty, takeRight } from 'lodash'
 import OpenAI, { AzureOpenAI } from 'openai'
 import {
@@ -359,13 +355,17 @@ export default class OpenAIProvider extends BaseProvider {
     const model = assistant.model || defaultModel
     const { contextCount, maxTokens, streamOutput } = getAssistantSettings(assistant)
     messages = addImageFileToContents(messages)
-    let systemMessage = assistant.prompt ? { role: 'system', content: assistant.prompt } : undefined
+    let systemMessage = { role: 'system', content: assistant.prompt || '' }
 
     if (isOpenAIoSeries(model)) {
       systemMessage = {
         role: 'developer',
         content: `Formatting re-enabled${systemMessage ? '\n' + systemMessage.content : ''}`
       }
+    }
+
+    if (mcpTools && mcpTools.length > 0) {
+      systemMessage.content = buildSystemPrompt(systemMessage.content || '', mcpTools)
     }
 
     const userMessages: ChatCompletionMessageParam[] = []
@@ -429,7 +429,7 @@ export default class OpenAIProvider extends BaseProvider {
     const { signal } = abortController
     await this.checkIsCopilot()
 
-    const tools = mcpTools && mcpTools.length > 0 ? mcpToolsToOpenAITools(mcpTools) : undefined
+    // const tools = mcpTools && mcpTools.length > 0 ? mcpToolsToOpenAITools(mcpTools) : undefined
 
     const reqMessages: ChatCompletionMessageParam[] = [systemMessage, ...userMessages].filter(
       Boolean
@@ -593,7 +593,7 @@ export default class OpenAIProvider extends BaseProvider {
                 max_tokens: maxTokens,
                 keep_alive: this.keepAliveTime,
                 stream: isSupportStreamOutput(),
-                tools: tools,
+                // tools: tools,
                 ...getOpenAIWebSearchParams(assistant, model),
                 ...this.getReasoningEffort(assistant, model),
                 ...this.getProviderSpecificParameters(assistant, model),
@@ -634,7 +634,7 @@ export default class OpenAIProvider extends BaseProvider {
           max_tokens: maxTokens,
           keep_alive: this.keepAliveTime,
           stream: isSupportStreamOutput(),
-          tools: tools,
+          // tools: tools,
           ...getOpenAIWebSearchParams(assistant, model),
           ...this.getReasoningEffort(assistant, model),
           ...this.getProviderSpecificParameters(assistant, model),
