@@ -346,7 +346,7 @@ const McpSettings: React.FC<Props> = ({ server }) => {
             paddingRight: '10px'
           }}>
           <Form.Item name="name" label={t('settings.mcp.name')} rules={[{ required: true, message: '' }]}>
-            <Input placeholder={t('common.name')} />
+            <Input placeholder={t('common.name')} disabled={server.type === 'inMemory'} />
           </Form.Item>
           <Form.Item
             name="autoApprove"
