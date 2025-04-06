@@ -208,10 +208,7 @@ const MessageContent: React.FC<Props> = ({ assistant, message: _message, model, 
       </Flex>
       <MessageThought message={message} />
       <MessageTools message={message} topic={topic} assistant={assistant} />
-      <Markdown
-        message={{ ...message, content: processedContent.replace(toolUseRegex, '') }}
-
-      />
+      <Markdown message={{ ...message, content: processedContent.replace(toolUseRegex, '') }} />
       {message.metadata?.generateImage && <MessageImage message={message} />}
       {message.translatedContent && (
         <Fragment>

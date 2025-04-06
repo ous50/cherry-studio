@@ -26,7 +26,6 @@ import { getStoreSetting } from '@renderer/hooks/useSettings'
 import i18n from '@renderer/i18n'
 import { getAssistantSettings, getDefaultModel, getTopNamingModel } from '@renderer/services/AssistantService'
 import { EVENT_NAMES } from '@renderer/services/EventService'
-import { buildSystemPrompt } from '@renderer/services/mcp/prompt'
 import {
   filterContextMessages,
   filterEmptyMessages,
@@ -35,6 +34,7 @@ import {
 import { Assistant, FileType, FileTypes, MCPToolResponse, Message, Model, Provider, Suggestion } from '@renderer/types'
 import { removeSpecialCharactersForTopicName } from '@renderer/utils'
 import { callMCPTool, geminiFunctionCallToMcpTool, upsertMCPToolResponse } from '@renderer/utils/mcp-tools'
+import { buildSystemPrompt } from '@renderer/utils/prompt'
 import { MB } from '@shared/config/constant'
 import axios from 'axios'
 import { isEmpty, takeRight } from 'lodash'

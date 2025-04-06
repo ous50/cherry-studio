@@ -13,7 +13,6 @@ import { getStoreSetting } from '@renderer/hooks/useSettings'
 import i18n from '@renderer/i18n'
 import { getAssistantSettings, getDefaultModel, getTopNamingModel } from '@renderer/services/AssistantService'
 import { EVENT_NAMES } from '@renderer/services/EventService'
-import { buildSystemPrompt } from '@renderer/services/mcp/prompt'
 import {
   filterContextMessages,
   filterEmptyMessages,
@@ -33,6 +32,7 @@ import {
 import { removeSpecialCharactersForTopicName } from '@renderer/utils'
 import { addImageFileToContents } from '@renderer/utils/formats'
 import { callMCPTool, openAIToolsToMcpTool, upsertMCPToolResponse } from '@renderer/utils/mcp-tools'
+import { buildSystemPrompt } from '@renderer/utils/prompt'
 import { isEmpty, takeRight } from 'lodash'
 import OpenAI, { AzureOpenAI } from 'openai'
 import {

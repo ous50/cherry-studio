@@ -10,7 +10,6 @@ import { isReasoningModel } from '@renderer/config/models'
 import { getStoreSetting } from '@renderer/hooks/useSettings'
 import i18n from '@renderer/i18n'
 import { getAssistantSettings, getDefaultModel, getTopNamingModel } from '@renderer/services/AssistantService'
-import { buildSystemPrompt } from '@renderer/services/mcp/prompt'
 import {
   filterContextMessages,
   filterEmptyMessages,
@@ -19,6 +18,7 @@ import {
 import { Assistant, FileTypes, MCPToolResponse, Message, Model, Provider, Suggestion } from '@renderer/types'
 import { removeSpecialCharactersForTopicName } from '@renderer/utils'
 import { anthropicToolUseToMcpTool, callMCPTool, upsertMCPToolResponse } from '@renderer/utils/mcp-tools'
+import { buildSystemPrompt } from '@renderer/utils/prompt'
 import { first, flatten, sum, takeRight } from 'lodash'
 import OpenAI from 'openai'
 
