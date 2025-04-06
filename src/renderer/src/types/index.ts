@@ -379,6 +379,7 @@ export interface MCPServer {
   env?: Record<string, string>
   isActive: boolean
   disabledTools?: string[] // List of tool names that are disabled for this server
+  autoApprove?: boolean // Automatically approve tool calls without user confirmation
 }
 
 export interface MCPToolInputSchema {

@@ -24,6 +24,7 @@ interface MCPFormValues {
   args?: string
   env?: string
   isActive: boolean
+  autoApprove?: boolean // Automatically approve tool calls without user confirmation
 }
 
 interface Registry {
@@ -86,6 +87,7 @@ const McpSettings: React.FC<Props> = ({ server }) => {
       command: server.command || '',
       registryUrl: server.registryUrl || '',
       isActive: server.isActive,
+      autoApprove: server.autoApprove !== undefined ? server.autoApprove : true, // Default to true if not set
       args: server.args ? server.args.join('\n') : '',
       env: server.env
         ? Object.entries(server.env)
@@ -145,7 +147,8 @@ const McpSettings: React.FC<Props> = ({ server }) => {
         type: values.serverType || server.type,
         description: values.description,
         isActive: values.isActive,
-        registryUrl: values.registryUrl
+        registryUrl: values.registryUrl,
+        autoApprove: values.autoApprove !== undefined ? values.autoApprove : true // Default to true if not set
       }
 
       // set stdio or sse server
@@ -343,7 +346,15 @@ const McpSettings: React.FC<Props> = ({ server }) => {
             paddingRight: '10px'
           }}>
           <Form.Item name="name" label={t('settings.mcp.name')} rules={[{ required: true, message: '' }]}>
-            <Input placeholder={t('common.name')} disabled={server.type === 'inMemory'} />
+            <Input placeholder={t('common.name')} />
+          </Form.Item>
+          <Form.Item
+            name="autoApprove"
+            label={t('settings.mcp.autoApprove', 'Auto Approve')}
+            tooltip={t('settings.mcp.autoApproveTooltip')}
+            valuePropName="checked"
+            initialValue={true}>
+            <Switch />
           </Form.Item>
           <Form.Item name="description" label={t('settings.mcp.description')}>
             <TextArea rows={2} placeholder={t('common.description')} />

@@ -2,9 +2,10 @@ import { CheckOutlined, ExpandOutlined, LoadingOutlined, PlayCircleOutlined, War
 import { useMessageOperations } from '@renderer/hooks/useMessageOperations'
 import { useSettings } from '@renderer/hooks/useSettings'
 import { Assistant, Message, Topic } from '@renderer/types'
+import { getMcpServerByTool } from '@renderer/utils/mcp-tools'
 import { Collapse, message as antdMessage, Modal, Tooltip } from 'antd'
 import { isEmpty } from 'lodash'
-import { FC, useMemo, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -15,6 +16,9 @@ interface Props {
 }
 
 const MessageTools: FC<Props> = ({ assistant, topic, message }) => {
+  // Extract toolResponses early so we can use it in hooks
+  const toolResponses = message.metadata?.mcpTools || []
+
   const [activeKeys, setActiveKeys] = useState<string[]>([])
   const [copiedMap, setCopiedMap] = useState<Record<string, boolean>>({})
   const [expandedResponse, setExpandedResponse] = useState<{ content: string; title: string } | null>(null)
@@ -22,14 +26,49 @@ const MessageTools: FC<Props> = ({ assistant, topic, message }) => {
   const { runMessageTool } = useMessageOperations(topic!)
   const { t } = useTranslation()
   const { messageFont, fontSize } = useSettings()
+
   const fontFamily = useMemo(() => {
     return messageFont === 'serif'
       ? 'serif'
       : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans","Helvetica Neue", sans-serif'
   }, [messageFont])
 
-  const toolResponses = message.metadata?.mcpTools || []
+  // Define executeTool with useCallback before it's used in useEffect
+  const executeTool = useCallback(
+    async (toolId: string) => {
+      try {
+        setExecutingTools((prev) => ({ ...prev, [toolId]: true }))
 
+        await runMessageTool(assistant!, message, toolId)
+      } catch (error) {
+        console.error('Failed to execute tool:', error)
+        antdMessage.error({ content: t('message.tools.executionFailed'), key: 'execute-tool' })
+      } finally {
+        setExecutingTools((prev) => ({ ...prev, [toolId]: false }))
+      }
+    },
+    [assistant, message, runMessageTool, t]
+  )
+
+  // Add useEffect for automatic tool execution
+  useEffect(() => {
+    if (!assistant || !message || !topic) return
+
+    // Check for tools that should be executed automatically
+    const pendingTools = toolResponses.filter((tr) => tr.status === 'pending')
+
+    pendingTools.forEach((toolResponse) => {
+      const { id, tool } = toolResponse
+      const mcpServer = getMcpServerByTool(tool)
+
+      if (mcpServer?.autoApprove !== false && !executingTools[id]) {
+        // Execute the tool automatically
+        executeTool(id)
+      }
+    })
+  }, [message, assistant, topic, executingTools, executeTool, toolResponses])
+
+  // Early return AFTER all hooks are defined
   if (isEmpty(toolResponses)) {
     return null
   }
@@ -43,20 +82,6 @@ const MessageTools: FC<Props> = ({ assistant, topic, message }) => {
 
   const handleCollapseChange = (keys: string | string[]) => {
     setActiveKeys(Array.isArray(keys) ? keys : [keys])
-  }
-
-  // Mock API call to execute a tool
-  const executeTool = async (toolId: string) => {
-    try {
-      setExecutingTools((prev) => ({ ...prev, [toolId]: true }))
-
-      await runMessageTool(assistant!, message, toolId)
-    } catch (error) {
-      console.error('Failed to execute tool:', error)
-      antdMessage.error({ content: t('message.tools.executionFailed'), key: 'execute-tool' })
-    } finally {
-      setExecutingTools((prev) => ({ ...prev, [toolId]: false }))
-    }
   }
 
   // Format tool responses for collapse items
