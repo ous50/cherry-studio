@@ -148,7 +148,6 @@ export function useMessageOperations(topic: Topic) {
         errorMessage = 'MCP Server not found'
       }
 
-      console.log('Tool run result:', toolResult, 'Error message:', errorMessage)
       const results: string[] = []
       if (errorMessage) {
         console.error(errorMessage)

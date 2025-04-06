@@ -274,7 +274,6 @@ export const sendMessage =
           })
         } else {
           // 创建新的助手消息
-          console.log('Creating new assistant message for topic:', topic.id)
           const assistantMessage = getAssistantMessage({ assistant, topic })
           assistantMessage.askId = userMessage.id
           assistantMessage.status = 'sending'
@@ -283,7 +282,6 @@ export const sendMessage =
 
         // 获取当前消息列表
         const currentMessages = getState().messages.messagesByTopic[topic.id]
-        console.log('Current messages for topic:', topic.id, currentMessages)
 
         // 最后一个具有相同askId的助手消息，在其后插入
         let position: number | undefined
@@ -369,8 +367,6 @@ export const sendMessage =
               // 没有找到消息索引的情况，过滤所有消息
               return messages.filter((m) => !m.status?.includes('ing'))
             }
-
-            console.log('assistantMessage', assistantMessage, 'handleMessages', handleMessages())
 
             await fetchChatCompletion({
               message: { ...assistantMessage },

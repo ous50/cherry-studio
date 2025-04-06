@@ -51,7 +51,6 @@ const MessageTools: FC<Props> = ({ assistant, topic, message }) => {
       setExecutingTools((prev) => ({ ...prev, [toolId]: true }))
 
       await runMessageTool(assistant!, message, toolId)
-      console.log(`Tool ${toolId} executed successfully.`, message)
     } catch (error) {
       console.error('Failed to execute tool:', error)
       antdMessage.error({ content: t('message.tools.executionFailed'), key: 'execute-tool' })

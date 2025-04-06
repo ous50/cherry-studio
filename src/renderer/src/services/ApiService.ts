@@ -252,7 +252,7 @@ export async function fetchChatCompletion({
         }
       }
     }
-    console.log('message', message, 'lastUserMessage', lastUserMessage)
+    // console.log('message', message, 'lastUserMessage', lastUserMessage)
   } catch (error: any) {
     if (isAbortError(error)) {
       message.status = 'paused'
