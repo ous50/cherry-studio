@@ -1,7 +1,7 @@
 import { SearchOutlined, SyncOutlined, TranslationOutlined } from '@ant-design/icons'
 import { isOpenAIWebSearch } from '@renderer/config/models'
 import { getModelUniqId } from '@renderer/services/ModelService'
-import { Message, Model } from '@renderer/types'
+import { Assistant, Message, Model, Topic } from '@renderer/types'
 import { getBriefInfo } from '@renderer/utils'
 import { withMessageThought } from '@renderer/utils/formats'
 import { Divider, Flex } from 'antd'
@@ -21,11 +21,13 @@ import MessageThought from './MessageThought'
 import MessageTools from './MessageTools'
 
 interface Props {
+  assistant?: Assistant
+  topic?: Topic
   message: Message
   model?: Model
 }
 
-const MessageContent: React.FC<Props> = ({ message: _message, model }) => {
+const MessageContent: React.FC<Props> = ({ assistant, message: _message, model, topic }) => {
   const { t } = useTranslation()
   const message = withMessageThought(clone(_message))
   const isWebCitation = model && (isOpenAIWebSearch(model) || model.provider === 'openrouter')
@@ -204,7 +206,7 @@ const MessageContent: React.FC<Props> = ({ message: _message, model }) => {
         {message.mentions?.map((model) => <MentionTag key={getModelUniqId(model)}>{'@' + model.name}</MentionTag>)}
       </Flex>
       <MessageThought message={message} />
-      <MessageTools message={message} />
+      <MessageTools message={message} topic={topic} assistant={assistant} />
       <Markdown message={{ ...message, content: processedContent }} />
       {message.metadata?.generateImage && <MessageImage message={message} />}
       {message.translatedContent && (

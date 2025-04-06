@@ -62,6 +62,9 @@ const computeDisplayMessages = (messages: Message[], startIndex: number, display
       displayMessages.push(message)
       return
     }
+    if (message.type === 'tool_response') {
+      return // 跳过工具响应消息
+    }
     // 如果是相同 askId 的助手消息，也要显示
     displayMessages.push(message)
   }

@@ -267,7 +267,7 @@ export function withToolUse(message: Message, mcpTools: MCPTool[]) {
         ...mcpTool,
         inputSchema: parsedArgs
       },
-      status: 'invoking'
+      status: 'pending'
     })
 
     // Remove the tool use block from the content

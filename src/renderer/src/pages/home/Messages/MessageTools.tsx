@@ -1,6 +1,7 @@
-import { CheckOutlined, ExpandOutlined, LoadingOutlined } from '@ant-design/icons'
+import { CheckOutlined, ExpandOutlined, LoadingOutlined, PlayCircleOutlined, WarningOutlined } from '@ant-design/icons'
+import { useMessageOperations } from '@renderer/hooks/useMessageOperations'
 import { useSettings } from '@renderer/hooks/useSettings'
-import { Message } from '@renderer/types'
+import { Assistant, Message, Topic } from '@renderer/types'
 import { Collapse, message as antdMessage, Modal, Tooltip } from 'antd'
 import { isEmpty } from 'lodash'
 import { FC, useMemo, useState } from 'react'
@@ -8,13 +9,17 @@ import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 interface Props {
+  assistant?: Assistant
+  topic: Topic
   message: Message
 }
 
-const MessageTools: FC<Props> = ({ message }) => {
+const MessageTools: FC<Props> = ({ assistant, topic, message }) => {
   const [activeKeys, setActiveKeys] = useState<string[]>([])
   const [copiedMap, setCopiedMap] = useState<Record<string, boolean>>({})
   const [expandedResponse, setExpandedResponse] = useState<{ content: string; title: string } | null>(null)
+  const [executingTools, setExecutingTools] = useState<Record<string, boolean>>({})
+  const { runMessageTool } = useMessageOperations(topic)
   const { t } = useTranslation()
   const { messageFont, fontSize } = useSettings()
   const fontFamily = useMemo(() => {
@@ -24,6 +29,8 @@ const MessageTools: FC<Props> = ({ message }) => {
   }, [messageFont])
 
   const toolResponses = message.metadata?.mcpTools || []
+
+  // console.log('showing message metadata:', message.metadata)
 
   if (isEmpty(toolResponses)) {
     return null
@@ -40,18 +47,38 @@ const MessageTools: FC<Props> = ({ message }) => {
     setActiveKeys(Array.isArray(keys) ? keys : [keys])
   }
 
+  // Mock API call to execute a tool
+  const executeTool = async (toolId: string) => {
+    try {
+      setExecutingTools((prev) => ({ ...prev, [toolId]: true }))
+
+      await runMessageTool(assistant!, message, toolId)
+      console.log(`Tool ${toolId} executed successfully.`, message)
+    } catch (error) {
+      console.error('Failed to execute tool:', error)
+      antdMessage.error({ content: t('message.tools.executionFailed'), key: 'execute-tool' })
+    } finally {
+      setExecutingTools((prev) => ({ ...prev, [toolId]: false }))
+    }
+  }
+
   // Format tool responses for collapse items
   const getCollapseItems = () => {
     const items: { key: string; label: React.ReactNode; children: React.ReactNode }[] = []
     // Add tool responses
     for (const toolResponse of toolResponses) {
       const { id, tool, status, response } = toolResponse
+      const isPending = status === 'pending'
       const isInvoking = status === 'invoking'
       const isDone = status === 'done'
-      const result = {
-        params: tool.inputSchema,
-        response: toolResponse.response
-      }
+      const isError = status === 'error'
+      const isExecuting = executingTools[id]
+      const result = isDone
+        ? {
+            params: tool.inputSchema,
+            response: toolResponse.response
+          }
+        : null
 
       items.push({
         key: id,
@@ -59,13 +86,33 @@ const MessageTools: FC<Props> = ({ message }) => {
           <MessageTitleLabel>
             <TitleContent>
               <ToolName>{tool.name}</ToolName>
-              <StatusIndicator $isInvoking={isInvoking}>
-                {isInvoking ? t('message.tools.invoking') : t('message.tools.completed')}
+              <StatusIndicator $isInvoking={isInvoking} $isPending={isPending} $isError={isError}>
+                {isPending && t('message.tools.pending', 'Pending')}
+                {isInvoking && t('message.tools.invoking')}
+                {isDone && t('message.tools.completed')}
+                {isError && t('message.tools.failed')}
+
                 {isInvoking && <LoadingOutlined spin style={{ marginLeft: 6 }} />}
                 {isDone && <CheckOutlined style={{ marginLeft: 6 }} />}
+                {isError && <WarningOutlined style={{ marginLeft: 6 }} />}
               </StatusIndicator>
             </TitleContent>
             <ActionButtonsContainer>
+              {isPending && (
+                <Tooltip title={t('message.tools.execute', 'Invoke')} mouseEnterDelay={0.5}>
+                  <ActionButton
+                    className="message-action-button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      executeTool(id)
+                    }}
+                    disabled={isExecuting}
+                    aria-label={t('message.tools.execute')}>
+                    {isExecuting ? <LoadingOutlined /> : <PlayCircleOutlined />}
+                  </ActionButton>
+                </Tooltip>
+              )}
+
               {isDone && response && (
                 <>
                   <Tooltip title={t('common.expand')} mouseEnterDelay={0.5}>
@@ -96,12 +143,43 @@ const MessageTools: FC<Props> = ({ message }) => {
                   </Tooltip>
                 </>
               )}
+
+              {isError && (
+                <Tooltip title={t('message.tools.retry')} mouseEnterDelay={0.5}>
+                  <ActionButton
+                    className="message-action-button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      executeTool(id)
+                    }}
+                    disabled={isExecuting}
+                    aria-label={t('message.tools.retry')}>
+                    {isExecuting ? <LoadingOutlined /> : <i className="iconfont icon-refresh"></i>}
+                  </ActionButton>
+                </Tooltip>
+              )}
             </ActionButtonsContainer>
           </MessageTitleLabel>
         ),
-        children: isDone && result && (
+        children: (
           <ToolResponseContainer style={{ fontFamily, fontSize: '12px' }}>
-            <CodeBlock>{JSON.stringify(result, null, 2)}</CodeBlock>
+            <CodeBlock>
+              {JSON.stringify(
+                {
+                  Server: tool.serverName,
+                  ToolName: tool.name,
+                  ToolArgs: toolResponse.tool.inputSchema,
+                  ToolResponse:
+                    isDone && response
+                      ? response
+                      : isError
+                        ? toolResponse.response
+                        : t('message.tools.noResponse', 'No response available')
+                },
+                null,
+                4
+              )}
+            </CodeBlock>
           </ToolResponseContainer>
         )
       })
@@ -195,8 +273,13 @@ const ToolName = styled.span`
   font-size: 13px;
 `
 
-const StatusIndicator = styled.span<{ $isInvoking: boolean }>`
-  color: ${(props) => (props.$isInvoking ? 'var(--color-primary)' : 'var(--color-success, #52c41a)')};
+const StatusIndicator = styled.span<{ $isInvoking?: boolean; $isPending?: boolean; $isError?: boolean }>`
+  color: ${(props) => {
+    if (props.$isInvoking) return 'var(--color-primary)'
+    if (props.$isPending) return 'var(--color-warning, #faad14)'
+    if (props.$isError) return 'var(--color-error, #f5222d)'
+    return 'var(--color-success, #52c41a)'
+  }};
   font-size: 11px;
   display: flex;
   align-items: center;
@@ -234,6 +317,14 @@ const ActionButton = styled.button`
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
     opacity: 1;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    &:hover {
+      background-color: transparent;
+    }
   }
 
   .iconfont {

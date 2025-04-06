@@ -1,4 +1,5 @@
 import { EVENT_NAMES, EventEmitter } from '@renderer/services/EventService'
+import { getUserMessage } from '@renderer/services/MessagesService'
 import { estimateMessageUsage } from '@renderer/services/TokenService'
 import store, { useAppDispatch, useAppSelector } from '@renderer/store'
 import {
@@ -10,6 +11,7 @@ import {
   selectDisplayCount,
   selectTopicLoading,
   selectTopicMessages,
+  sendMessage,
   setStreamMessage,
   setTopicLoading,
   updateMessages,
@@ -17,6 +19,7 @@ import {
 } from '@renderer/store/messages'
 import type { Assistant, Message, Topic } from '@renderer/types'
 import { abortCompletion } from '@renderer/utils/abortController'
+import { getMcpServerByTool } from '@renderer/utils/mcp-tools'
 import { useCallback } from 'react'
 
 import { TopicManager } from './useTopic'
@@ -69,6 +72,20 @@ export function useMessageOperations(topic: Topic) {
     [dispatch, topic.id]
   )
 
+  const editMessageToolResponse = useCallback(
+    async (message: Message, toolId: string, status: string, response: any) => {
+      await editMessage(message.id, {
+        metadata: {
+          ...message.metadata,
+          mcpTools: message.metadata?.mcpTools?.map((t) =>
+            t.id === toolId ? { ...t, status: status, response: response } : t
+          )
+        }
+      })
+    },
+    [editMessage]
+  )
+
   /**
    * 重新发送消息
    */
@@ -90,6 +107,82 @@ export function useMessageOperations(topic: Topic) {
       return dispatch(resendMessage({ ...message, content: editedContent }, assistant, topic))
     },
     [dispatch, editMessage, topic]
+  )
+
+  const runMessageTool = useCallback(
+    async (assistant: Assistant, message: Message, toolId: string) => {
+      const tool = message.metadata?.mcpTools?.find((t) => t.id === toolId)
+      if (!tool) {
+        console.error(`Tool with id ${toolId} not found in message ${message.id}`)
+        return
+      }
+
+      // first update the tool status to 'invoking' to indicate it's running
+      await editMessageToolResponse(
+        message,
+        tool.id,
+        'invoking', // 设置工具状态为 running
+        undefined
+      )
+
+      const mcpTool = tool.tool
+      const mcpServer = getMcpServerByTool(mcpTool)
+      let toolResult = null
+      let errorMessage = ''
+      if (mcpServer) {
+        try {
+          const resp = await window.api.mcp.callTool({
+            server: mcpServer,
+            name: mcpTool.name,
+            args: mcpTool.inputSchema
+          })
+          if (resp) {
+            toolResult = resp
+          } else {
+            errorMessage = 'Tool returned no response'
+          }
+        } catch (error) {
+          errorMessage = `Error running tool ${mcpTool.name}: ${error}`
+        }
+      } else {
+        errorMessage = 'MCP Server not found'
+      }
+
+      console.log('Tool run result:', toolResult, 'Error message:', errorMessage)
+      const results: string[] = []
+      if (errorMessage) {
+        console.error(errorMessage)
+        await editMessageToolResponse(
+          message,
+          tool.id,
+          'error', // 设置工具状态为 error
+          errorMessage
+        )
+        results.push(errorMessage)
+      } else {
+        await editMessageToolResponse(
+          message,
+          tool.id,
+          'done', // 设置工具状态为 done
+          toolResult
+        )
+        results.push(`
+<tool_use_result>
+  <name>${tool.id}</name>
+  <result>${JSON.stringify(toolResult)}</result>
+</tool_use_result>          
+`)
+      }
+
+      const userMessage = getUserMessage({
+        assistant,
+        topic: topic,
+        type: 'tool_response',
+        content: results.join('\n')
+      })
+      return dispatch(sendMessage(userMessage, assistant, topic, {}))
+    },
+    [dispatch, editMessageToolResponse, topic]
   )
 
   /**
@@ -216,7 +309,8 @@ export function useMessageOperations(topic: Topic) {
     clearTopicMessages: clearTopicMessagesAction,
     // pauseMessage,
     pauseMessages,
-    resumeMessage
+    resumeMessage,
+    runMessageTool
   }
 }
 
