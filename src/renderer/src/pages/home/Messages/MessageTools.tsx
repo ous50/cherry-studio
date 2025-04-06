@@ -10,7 +10,7 @@ import styled from 'styled-components'
 
 interface Props {
   assistant?: Assistant
-  topic: Topic
+  topic?: Topic
   message: Message
 }
 
@@ -19,7 +19,7 @@ const MessageTools: FC<Props> = ({ assistant, topic, message }) => {
   const [copiedMap, setCopiedMap] = useState<Record<string, boolean>>({})
   const [expandedResponse, setExpandedResponse] = useState<{ content: string; title: string } | null>(null)
   const [executingTools, setExecutingTools] = useState<Record<string, boolean>>({})
-  const { runMessageTool } = useMessageOperations(topic)
+  const { runMessageTool } = useMessageOperations(topic!)
   const { t } = useTranslation()
   const { messageFont, fontSize } = useSettings()
   const fontFamily = useMemo(() => {
@@ -29,8 +29,6 @@ const MessageTools: FC<Props> = ({ assistant, topic, message }) => {
   }, [messageFont])
 
   const toolResponses = message.metadata?.mcpTools || []
-
-  // console.log('showing message metadata:', message.metadata)
 
   if (isEmpty(toolResponses)) {
     return null

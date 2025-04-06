@@ -124,6 +124,7 @@ const MessageContent: React.FC<Props> = ({ assistant, message: _message, model, 
     message?.metadata?.webSearch?.results,
     message?.metadata?.webSearchInfo
   ])
+  const toolUseRegex = /<tool_use>[\s\S]*?<\/tool_use>/gm
 
   // Process content to make citation numbers clickable
   const processedContent = useMemo(() => {
@@ -207,7 +208,10 @@ const MessageContent: React.FC<Props> = ({ assistant, message: _message, model, 
       </Flex>
       <MessageThought message={message} />
       <MessageTools message={message} topic={topic} assistant={assistant} />
-      <Markdown message={{ ...message, content: processedContent }} />
+      <Markdown
+        message={{ ...message, content: processedContent.replace(toolUseRegex, '') }}
+
+      />
       {message.metadata?.generateImage && <MessageImage message={message} />}
       {message.translatedContent && (
         <Fragment>
