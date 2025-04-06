@@ -120,6 +120,10 @@ const MessageItem: FC<Props> = ({
     )
   }
 
+  if (message.type === 'tool_response') {
+    return null // Tool responses are not displayed in the message list
+  }
+
   return (
     <MessageContainer
       key={message.id}
