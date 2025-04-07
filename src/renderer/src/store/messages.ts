@@ -277,6 +277,9 @@ export const sendMessage =
           const assistantMessage = getAssistantMessage({ assistant, topic })
           assistantMessage.askId = userMessage.id
           assistantMessage.status = 'sending'
+          if (userMessage.type === 'toolUse') {
+            assistantMessage.type = 'toolUseResponse'
+          }
           assistantMessages.push(assistantMessage)
         }
 

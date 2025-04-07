@@ -176,7 +176,7 @@ export function useMessageOperations(topic: Topic) {
       const userMessage = getUserMessage({
         assistant,
         topic: topic,
-        type: 'tool_response',
+        type: 'toolUse',
         content: results.join('\n')
       })
       return dispatch(sendMessage(userMessage, assistant, topic, {}))

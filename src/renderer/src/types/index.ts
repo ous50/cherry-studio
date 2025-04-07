@@ -63,7 +63,7 @@ export type Message = {
   usage?: OpenAI.Completions.CompletionUsage
   metrics?: Metrics
   knowledgeBaseIds?: string[]
-  type: 'text' | '@' | 'clear' | 'tool_response'
+  type: 'text' | '@' | 'clear' | 'toolUse' | 'toolUseResponse'
   isPreset?: boolean
   mentions?: Model[]
   askId?: string

@@ -120,7 +120,7 @@ const MessageItem: FC<Props> = ({
     )
   }
 
-  if (message.type === 'tool_response') {
+  if (message.type === 'toolUse') {
     return null // Tool responses are not displayed in the message list
   }
 
@@ -144,7 +144,9 @@ const MessageItem: FC<Props> = ({
           <div />
         </Dropdown>
       )}
-      <MessageHeader message={message} assistant={assistant} model={model} key={getModelUniqId(model)} />
+      {message.type !== 'toolUseResponse' && (
+        <MessageHeader message={message} assistant={assistant} model={model} key={getModelUniqId(model)} />
+      )}
       <MessageContentContainer
         className="message-content-container"
         style={{ fontFamily, fontSize, background: messageBackground, overflowY: 'visible' }}>
