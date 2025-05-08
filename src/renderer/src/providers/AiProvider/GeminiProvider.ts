@@ -376,6 +376,8 @@ export default class GeminiProvider extends BaseProvider {
     }
 
     const generateContentConfig: GenerateContentConfig = {
+      responseModalities: canGenerateImage ? [Modality.TEXT, Modality.IMAGE] : undefined,
+      responseMimeType: canGenerateImage ? 'text/plain' : undefined,
       safetySettings: this.getSafetySettings(),
       // generate image don't need system instruction
       systemInstruction: isGemmaModel(model) ? undefined : systemInstruction,
