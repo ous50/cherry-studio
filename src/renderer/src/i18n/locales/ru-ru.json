@@ -195,6 +195,7 @@
       "input.web_search.button.ok": "Перейти в Настройки",
       "input.web_search.enable": "Включить веб-поиск",
       "input.web_search.enable_content": "Необходимо предварительно проверить подключение к веб-поиску в настройках",
+      "input.url_context": "Контекст страницы",
       "message.new.branch": "Новая ветка",
       "message.new.branch.created": "Новая ветка создана",
       "message.new.context": "Новый контекст",

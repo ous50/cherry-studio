@@ -209,6 +209,7 @@
       "input.web_search.builtin.disabled_content": "当前模型不支持网络搜索功能",
       "input.web_search.no_web_search": "不使用网络",
       "input.web_search.no_web_search.description": "不启用网络搜索功能",
+      "input.url_context": "网页上下文",
       "input.tools.collapse": "折叠",
       "input.tools.expand": "展开",
       "input.tools.collapse_in": "加入折叠",

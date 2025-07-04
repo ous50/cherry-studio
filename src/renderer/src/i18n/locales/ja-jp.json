@@ -336,7 +336,8 @@
       "input.thinking.mode.custom.tip": "モデルが最大で思考できるトークン数。モデルのコンテキスト制限を考慮する必要があります。そうしないとエラーが発生します",
       "input.thinking.mode.default.tip": "モデルが自動的に思考のトークン数を決定します",
       "input.thinking.mode.tokens.tip": "思考のトークン数を設定します",
-      "input.thinking.budget_exceeds_max": "思考予算が最大トークン数を超えました"
+      "input.thinking.budget_exceeds_max": "思考予算が最大トークン数を超えました",
+      "input.url_context": "URLコンテキスト"
     },
     "code_block": {
       "collapse": "折りたたむ",
