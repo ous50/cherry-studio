@@ -400,34 +400,40 @@ export const SYSTEM_MODELS: Record<SystemProviderId | 'defaultModel', Model[]> =
   ],
   gemini: [
     {
-      id: 'gemini-1.5-flash',
+      id: 'gemini-2.5-pro',
       provider: 'gemini',
-      name: 'Gemini 1.5 Flash',
-      group: 'Gemini 1.5'
+      name: 'Gemini 2.5 Pro',
+      group: 'models'
     },
     {
-      id: 'gemini-1.5-flash-8b',
+      id: 'gemini-2.5-flash',
       provider: 'gemini',
-      name: 'Gemini 1.5 Flash (8B)',
-      group: 'Gemini 1.5'
+      name: 'Gemini 2.5 Flash',
+      group: 'models'
     },
     {
-      id: 'gemini-1.5-pro',
-      name: 'Gemini 1.5 Pro',
+      id: 'gemini-3-pro',
+      name: 'Gemini 3 Pro',
       provider: 'gemini',
-      group: 'Gemini 1.5'
+      group: 'models'
     },
     {
-      id: 'gemini-2.0-flash',
+      id: 'gemini-2.5-flash',
       provider: 'gemini',
-      name: 'Gemini 2.0 Flash',
-      group: 'Gemini 2.0'
+      name: 'Gemini 2.5 Flash',
+      group: 'models'
     },
     {
       id: 'gemini-2.5-flash-image-preview',
       provider: 'gemini',
-      name: 'Gemini 2.5 Flash Image',
-      group: 'Gemini 2.5'
+      name: 'Nano Banana',
+      group: 'models'
+    },
+    {
+      id: 'gemini-3.0-pro-image-preview',
+      provider: 'gemini',
+      name: 'Nano Banana Pro',
+      group: 'models'
     }
   ],
   anthropic: [
