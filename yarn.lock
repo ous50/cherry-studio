@@ -220,13 +220,13 @@ __metadata:
 
 "@ai-sdk/google@patch:@ai-sdk/google@npm%3A2.0.36#~/.yarn/patches/@ai-sdk-google-npm-2.0.36-6f3cc06026.patch":
   version: 2.0.36
-  resolution: "@ai-sdk/google@patch:@ai-sdk/google@npm%3A2.0.36#~/.yarn/patches/@ai-sdk-google-npm-2.0.36-6f3cc06026.patch::version=2.0.36&hash=2da8c3"
+  resolution: "@ai-sdk/google@patch:@ai-sdk/google@npm%3A2.0.36#~/.yarn/patches/@ai-sdk-google-npm-2.0.36-6f3cc06026.patch::version=2.0.36&hash=3a5859"
   dependencies:
     "@ai-sdk/provider": "npm:2.0.0"
     "@ai-sdk/provider-utils": "npm:3.0.17"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/ce99a497360377d2917cf3a48278eb6f4337623ce3738ba743cf048c8c2a7731ec4fc27605a50e461e716ed49b3690206ca8e4078f27cb7be162b684bfc2fc22
+  checksum: 10c0/8ab6ef14f32953a9b65baf29de3158b6f78d5bd61587b12b8a9a497de83081e2125b53f050e0ec40a606435d59d901d62f565ea44514ef3e13cde0027a620caa
   languageName: node
   linkType: hard
 
